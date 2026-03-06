@@ -131,10 +131,14 @@ async function submitApplication(thread, sess, form) {
 
     // Build review embeds (split across multiple if needed, Discord has 25 field limit)
     const reviewChannelId = process.env[form.reviewChannelEnvKey] || process.env.REVIEW_CHANNEL_ID;
-    const reviewChannel = client.channels.cache.get(reviewChannelId);
+    let reviewChannel = client.channels.cache.get(reviewChannelId);
+    if (!reviewChannel) {
+        try { reviewChannel = await client.channels.fetch(reviewChannelId); } catch {}
+    }
 
     if (!reviewChannel) {
-        console.error(`Review channel not found for form ${form.id}`);
+        console.error(`Review channel not found for form ${form.id} (ID: ${reviewChannelId})`);
+        await thread.send({ content: 'Your application was saved but staff could not be notified. Please contact an admin.' });
         return;
     }
 
@@ -186,7 +190,12 @@ async function submitApplication(thread, sess, form) {
             .setStyle(ButtonStyle.Danger)
     );
 
-    await reviewChannel.send({ embeds, components: [buttons] });
+    try {
+        await reviewChannel.send({ embeds, components: [buttons] });
+    } catch (err) {
+        console.error('Failed to send review embed:', err.message);
+        await thread.send({ content: 'Your application was submitted but there was an error notifying staff. Please contact an admin.' });
+    }
 }
 
 // ─── INTERACTION HANDLER ───────────────────────────────────────────
