@@ -1,0 +1,390 @@
+{
+  "forms": [
+    {
+      "id": "business",
+      "title": "TRRP Business Application",
+      "description": "Thank you for your interest in applying for a business here in the Portico State. Please fill out the application below.",
+      "reviewChannelEnvKey": "REVIEW_CHANNEL_ID",
+      "questions": [
+        {
+          "id": "char_name",
+          "label": "Character Name: Discord Name & CID",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "timezone",
+          "label": "What Time Zone are you?",
+          "type": "choice",
+          "required": true,
+          "options": ["AEST", "AKST", "CET", "CST", "EST", "GMT", "MST", "NZST", "PST"]
+        },
+        {
+          "id": "time_in_server",
+          "label": "How long have you been part of Thunder Ridge?",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "backstory",
+          "label": "Character Background (Brief) — Provide a short backstory explaining who your character is and how they would realistically come to operate a business.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "biz_name",
+          "label": "Proposed Business Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "biz_type",
+          "label": "Type of Business",
+          "type": "choice",
+          "required": true,
+          "options": ["Saloon", "Ranch", "Gunsmith", "Blacksmith", "Other"]
+        },
+        {
+          "id": "biz_location",
+          "label": "Business location, town/area?",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "biz_desc",
+          "label": "Business Description — Describe what your business will offer and its purpose in the community.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "products",
+          "label": "Products / Services Offered — List the goods or services your business will provide.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "rp_value",
+          "label": "How will your business create roleplay for the server? Explain events, interactions, employment opportunities, or storylines.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "hours",
+          "label": "Hours of Operation (Approximate)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "activity",
+          "label": "How active will you be as the business owner? (Daily, several times a week, weekends, etc.)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "employees",
+          "label": "Will you be hiring employees? If yes, how many? Describe positions and how you plan to manage staff.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "why_approve",
+          "label": "Why should Thunder Ridge approve your business?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "proposal_link",
+          "label": "Please submit your business proposal link here",
+          "type": "text",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "gang",
+      "title": "Gang Whitelist Application",
+      "description": "Application for gang whitelist status. 8 members are MANDATORY. Story-driven RP comes before PvP.",
+      "reviewChannelEnvKey": "REVIEW_CHANNEL_ID",
+      "questions": [
+        {
+          "id": "gang_name",
+          "label": "Gang Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "gang_type",
+          "label": "What theme/type of gang are you?",
+          "type": "choice",
+          "required": true,
+          "options": ["Outlaw", "Crime Family", "Mercenaries", "Ranch Gang", "Bounty Hunters", "Cult"]
+        },
+        {
+          "id": "leader",
+          "label": "Leader Name & Discord",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "underboss",
+          "label": "Underboss Name & Discord",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "member_count",
+          "label": "How many members do you currently have?",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "member_list",
+          "label": "Please list ALL CURRENT members with their IC Name & Discord",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "territory",
+          "label": "Where will your gang be operating out of?",
+          "type": "choice",
+          "required": true,
+          "options": ["Annesburg", "Armadillo", "Blackwater", "Colter", "Plainview", "Rhodes", "Saint Denis", "Tumbleweed", "Valentine", "Van Horn"]
+        },
+        {
+          "id": "concept",
+          "label": "Provide a summary of your gang's concept and what makes it unique.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "backstory",
+          "label": "How and why was the gang formed? Include backstory, key events, or motivations.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "goals",
+          "label": "What does your gang want to achieve in the world?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "conflict",
+          "label": "How will your gang handle conflict with other gangs, civilians, and law enforcement?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "style",
+          "label": "Gang Colors / Symbols, Uniform or Clothing Style, Additional Information",
+          "type": "paragraph",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "native",
+      "title": "Native Whitelist Application",
+      "description": "Fill out this Application. Weak/low effort or AI Generated responses will not be accepted and immediately denied.",
+      "reviewChannelEnvKey": "REVIEW_CHANNEL_ID",
+      "questions": [
+        {
+          "id": "tribe_name",
+          "label": "What is the name of your Tribe?",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "territory",
+          "label": "After leaving Ambarino (Wapiti), what area/territory are you desiring to claim/fight for? Include details about structures and their intended use.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "backstory",
+          "label": "Please give a detailed Backstory of your Tribe — Explain how the group became unified.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "story_arc",
+          "label": "How does your Tribe plan on role-playing their story arc?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "tribe_type",
+          "label": "What type of Tribe do you plan to be?",
+          "type": "choice",
+          "required": true,
+          "options": ["Trade Heavy", "Aggressive", "Gang-like", "Peaceful", "Other"]
+        },
+        {
+          "id": "member_list",
+          "label": "Please list ALL of your members in your Tribe (Character & Discord names). 8 members required, MAX 20.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "chief",
+          "label": "Please list Chief (IC name & Discord name)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "craftsmen",
+          "label": "Please list Craftsmen and Assistant (IC name & Discord name)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "medicine",
+          "label": "Please list Medicine Man/Woman and Assistant (IC name & Discord name)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "cook",
+          "label": "Please list Cook and Assistant (IC name & Discord name)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "carver",
+          "label": "Please list Carver (IC name & Discord name)",
+          "type": "text",
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "staff",
+      "title": "TRRP Staff Application",
+      "description": "Application for staff positions within Thunder Ridge. Professionalism and fair conduct required.",
+      "reviewChannelEnvKey": "REVIEW_CHANNEL_ID",
+      "questions": [
+        {
+          "id": "discord_cid",
+          "label": "Discord Name & CID",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "char_names",
+          "label": "In-Game Character Name(s) — Please list ALL",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "timezone",
+          "label": "What Time Zone are you?",
+          "type": "choice",
+          "required": true,
+          "options": ["AEST", "AKST", "CET", "CST", "EST", "GMT", "MST", "NZST", "PST"]
+        },
+        {
+          "id": "time_in_server",
+          "label": "How long have you been part of Thunder Ridge?",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "hours_per_week",
+          "label": "Average hours you play per week",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "active_times",
+          "label": "When are you most active? (Morning, Afternoon, Evening, Late Night, Weekends)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "past_staff",
+          "label": "Have you been staff on another server before? If yes, include server name, position, duration, and reason for leaving.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "experience",
+          "label": "Do you have experience with: RedM administration, ticket systems, conflict resolution, event hosting? Describe.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "scenario_1",
+          "label": "A player is yelling and disrespectful in a staff situation. How would you handle it?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "scenario_2",
+          "label": "Two players arguing over roleplay — both claim rule violations. What steps do you take?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "scenario_3",
+          "label": "You see a friend breaking server rules. What do you do?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "scenario_4",
+          "label": "A new player seems confused and frustrated. How would you assist them?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "why_staff",
+          "label": "Why do you want to become staff on Thunder Ridge?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "good_fit",
+          "label": "What makes you a good fit for a staff position?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "strengths",
+          "label": "What strengths would you bring to the team?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "weakness",
+          "label": "What is one weakness you are working on?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "stress",
+          "label": "How do you handle stress or pressure?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "leading",
+          "label": "What does 'leading by example' mean to you?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "moderation",
+          "label": "What is your understanding of fair and unbiased moderation?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "anything_else",
+          "label": "Anything else you would like us to know?",
+          "type": "paragraph",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

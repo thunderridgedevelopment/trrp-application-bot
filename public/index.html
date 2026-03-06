@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRRP Application Bot — Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f0f1a;
+            color: #eee;
+            min-height: 100vh;
+        }
+
+        /* ─── NAV ─────────────────────────────────────── */
+        .navbar {
+            background: #16213e;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #5865F2;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .navbar h1 { font-size: 1.2rem; color: #5865F2; }
+        .navbar .user-info { display: flex; align-items: center; gap: 0.75rem; }
+        .navbar .user-info img { width: 28px; height: 28px; border-radius: 50%; }
+        .navbar a {
+            color: #888;
+            text-decoration: none;
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .navbar a:hover { background: #5865F233; color: #fff; }
+
+        /* ─── LOGIN ───────────────────────────────────── */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 80vh;
+            gap: 1.5rem;
+        }
+        .login-container h2 { font-size: 1.8rem; }
+        .login-container p { color: #666; max-width: 400px; text-align: center; font-size: 0.95rem; }
+        .login-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: #5865F2;
+            color: #fff;
+            padding: 0.7rem 1.4rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+        .login-btn:hover { background: #4752c4; }
+        .error-msg {
+            background: #ed424522;
+            border: 1px solid #ed4245;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            color: #ff6b6b;
+            font-size: 0.9rem;
+        }
+
+        /* ─── LAYOUT ──────────────────────────────────── */
+        .layout { display: flex; min-height: calc(100vh - 52px); }
+
+        /* ─── SIDEBAR ─────────────────────────────────── */
+        .sidebar {
+            width: 260px;
+            background: #12122a;
+            border-right: 1px solid #1e1e3a;
+            padding: 1rem 0;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 0 1rem 0.75rem;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            font-weight: 700;
+        }
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.55rem 1rem;
+            cursor: pointer;
+            transition: 0.15s;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .sidebar-item:hover { background: #1a1a35; color: #fff; }
+        .sidebar-item.active {
+            background: #5865F210;
+            border-left-color: #5865F2;
+            color: #5865F2;
+        }
+        .sidebar-item .q-count {
+            font-size: 0.75rem;
+            background: #2a2a4a;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            color: #666;
+        }
+        .sidebar-add {
+            margin: 0.5rem 1rem;
+            padding: 0.5rem;
+            background: transparent;
+            border: 1px dashed #333;
+            color: #555;
+            border-radius: 6px;
+            cursor: pointer;
+            width: calc(100% - 2rem);
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .sidebar-add:hover { border-color: #5865F2; color: #5865F2; }
+
+        /* ─── MAIN CONTENT ────────────────────────────── */
+        .main { flex: 1; padding: 1.5rem 2rem; overflow-y: auto; padding-bottom: 5rem; }
+
+        .form-header { margin-bottom: 1.5rem; }
+        .form-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        .title-input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid #2a2a4a;
+            color: #fff;
+            font-size: 1.4rem;
+            font-weight: 700;
+            padding: 0.3rem 0;
+            flex: 1;
+            outline: none;
+            transition: 0.2s;
+        }
+        .title-input:focus { border-color: #5865F2; }
+
+        .desc-input {
+            width: 100%;
+            background: #12122a;
+            border: 1px solid #2a2a4a;
+            color: #ccc;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 50px;
+            outline: none;
+            transition: 0.2s;
+        }
+        .desc-input:focus { border-color: #5865F2; }
+
+        .delete-form-btn {
+            background: transparent;
+            border: 1px solid #ed424555;
+            color: #ed4245;
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .delete-form-btn:hover { background: #ed4245; color: #fff; }
+
+        /* ─── QUESTION CARDS ─────────────────────────── */
+        .question-card {
+            background: #16213e;
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            border: 1px solid #1e1e3a;
+            transition: 0.15s;
+        }
+        .question-card:hover { border-color: #5865F233; }
+        .question-card.dragging { opacity: 0.4; border-color: #5865F2; }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .card-number {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #555;
+            font-weight: 700;
+        }
+        .card-actions { display: flex; gap: 0.3rem; }
+        .card-actions button {
+            background: #1a1a35;
+            border: none;
+            color: #666;
+            width: 26px; height: 26px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card-actions button:hover { background: #5865F2; color: #fff; }
+        .card-actions .del-btn:hover { background: #ed4245; }
+
+        .field-row { display: flex; gap: 0.75rem; margin-bottom: 0.6rem; align-items: flex-end; }
+        .field-group { display: flex; flex-direction: column; gap: 0.2rem; }
+        .field-group.grow { flex: 1; }
+        .field-group label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #555;
+            font-weight: 600;
+        }
+        .field-group input, .field-group select, .field-group textarea {
+            background: #0d1b2a;
+            border: 1px solid #1e1e3a;
+            color: #ddd;
+            padding: 0.4rem 0.6rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: 0.2s;
+        }
+        .field-group input:focus, .field-group select:focus, .field-group textarea:focus { border-color: #5865F2; }
+
+        .options-section {
+            margin-top: 0.5rem;
+            padding: 0.6rem;
+            background: #0d1b2a;
+            border-radius: 5px;
+        }
+        .options-section label { display: block; margin-bottom: 0.3rem; }
+        .options-list { display: flex; flex-wrap: wrap; gap: 0.3rem; margin-bottom: 0.4rem; }
+        .option-chip {
+            background: #1e1e3a;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: #aaa;
+        }
+        .option-chip .remove-opt {
+            cursor: pointer;
+            color: #ed4245;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .option-chip .remove-opt:hover { color: #ff6b6b; }
+        .add-option-row { display: flex; gap: 0.3rem; }
+        .add-option-row input {
+            flex: 1;
+            background: #16213e;
+            border: 1px solid #2a2a4a;
+            color: #ddd;
+            padding: 0.3rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            outline: none;
+        }
+        .add-option-row button {
+            background: #5865F2;
+            border: none;
+            color: #fff;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .toggle-row { display: flex; align-items: center; gap: 0.4rem; }
+        .toggle { position: relative; width: 36px; height: 20px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .toggle .slider {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: #2a2a4a; border-radius: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .toggle .slider::before {
+            content: ''; position: absolute; width: 16px; height: 16px;
+            left: 2px; bottom: 2px; background: #fff; border-radius: 50%; transition: 0.2s;
+        }
+        .toggle input:checked + .slider { background: #5865F2; }
+        .toggle input:checked + .slider::before { transform: translateX(16px); }
+
+        /* ─── ADD QUESTION ────────────────────────────── */
+        .add-q-btn {
+            width: 100%;
+            padding: 0.65rem;
+            background: transparent;
+            border: 1px dashed #2a2a4a;
+            color: #555;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 1rem;
+        }
+        .add-q-btn:hover { border-color: #5865F2; color: #5865F2; }
+
+        /* ─── SAVE BAR ────────────────────────────────── */
+        .save-bar {
+            position: fixed;
+            bottom: 0;
+            left: 260px;
+            right: 0;
+            background: #16213e;
+            border-top: 2px solid #5865F2;
+            padding: 0.75rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: translateY(100%);
+            transition: transform 0.25s;
+            z-index: 100;
+        }
+        .save-bar.visible { transform: translateY(0); }
+        .save-bar p { color: #888; font-size: 0.9rem; }
+        .save-bar .btns { display: flex; gap: 0.5rem; }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary { background: #5865F2; color: #fff; }
+        .btn-primary:hover { background: #4752c4; }
+        .btn-secondary { background: #2a2a4a; color: #aaa; }
+        .btn-secondary:hover { background: #333; color: #fff; }
+
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transform: translateY(150%);
+            transition: transform 0.3s;
+            z-index: 200;
+        }
+        .toast.visible { transform: translateY(0); }
+        .toast.success { background: #57F287; color: #000; }
+        .toast.error { background: #ed4245; color: #fff; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #444;
+        }
+        .empty-state h3 { margin-bottom: 0.5rem; color: #555; }
+
+        /* responsive */
+        @media (max-width: 768px) {
+            .layout { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #1e1e3a; }
+            .save-bar { left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN PAGE -->
+    <div id="login-page" style="display:none;">
+        <nav class="navbar"><h1>TRRP Application Bot</h1></nav>
+        <div class="login-container">
+            <h2>Dashboard</h2>
+            <p>Manage your application forms. Login with Discord to continue.</p>
+            <div id="login-error" style="display:none;" class="error-msg"></div>
+            <a href="/auth/login" class="login-btn">Login with Discord</a>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-page" style="display:none;">
+        <nav class="navbar">
+            <h1>TRRP Application Bot</h1>
+            <div class="user-info">
+                <img id="user-avatar" src="" alt="">
+                <span id="user-name" style="font-size:0.9rem;"></span>
+                <a href="/auth/logout">Logout</a>
+            </div>
+        </nav>
+
+        <div class="layout">
+            <aside class="sidebar">
+                <div class="sidebar-header">Application Forms</div>
+                <div id="sidebar-list"></div>
+                <button class="sidebar-add" id="add-form-btn">+ New Form</button>
+            </aside>
+
+            <main class="main" id="main-content">
+                <div class="empty-state">
+                    <h3>Select a form</h3>
+                    <p>Choose a form from the sidebar to edit it.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- SAVE BAR -->
+    <div class="save-bar" id="save-bar">
+        <p>Unsaved changes</p>
+        <div class="btns">
+            <button class="btn btn-secondary" id="discard-btn">Discard</button>
+            <button class="btn btn-primary" id="save-btn">Save All</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let forms = [];
+        let activeIndex = -1;
+        let hasChanges = false;
+        let originalJSON = '';
+
+        // ─── INIT ──────────────────────────────────────
+        async function init() {
+            const params = new URLSearchParams(location.search);
+            const error = params.get('error');
+            if (error) {
+                const map = {
+                    no_code: 'Authorization failed.',
+                    token_failed: 'Token failed. Check Client Secret.',
+                    not_in_guild: 'You are not in the configured server.',
+                    no_permission: 'You need Manage Server permission.',
+                    auth_failed: 'Authentication failed.'
+                };
+                document.getElementById('login-error').textContent = map[error] || 'Error occurred.';
+                document.getElementById('login-error').style.display = 'block';
+            }
+
+            try {
+                const res = await fetch('/auth/me');
+                if (res.ok) {
+                    const user = await res.json();
+                    showDashboard(user);
+                    await loadAllForms();
+                } else {
+                    showLogin();
+                }
+            } catch { showLogin(); }
+        }
+
+        function showLogin() {
+            document.getElementById('login-page').style.display = 'block';
+            document.getElementById('dashboard-page').style.display = 'none';
+        }
+
+        function showDashboard(user) {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('dashboard-page').style.display = 'block';
+            const avatar = user.avatar
+                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
+                : `https://cdn.discordapp.com/embed/avatars/0.png`;
+            document.getElementById('user-avatar').src = avatar;
+            document.getElementById('user-name').textContent = user.globalName || user.username;
+        }
+
+        // ─── DATA ──────────────────────────────────────
+        async function loadAllForms() {
+            const res = await fetch('/api/forms');
+            const data = await res.json();
+            forms = data.forms || [];
+            originalJSON = JSON.stringify(forms);
+            renderSidebar();
+            if (forms.length > 0) { activeIndex = 0; renderSidebar(); renderForm(); }
+        }
+
+        async function saveAllForms() {
+            const res = await fetch('/api/forms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ forms })
+            });
+            if (res.ok) {
+                originalJSON = JSON.stringify(forms);
+                setChanged(false);
+                showToast('Saved!', 'success');
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Save failed', 'error');
+            }
+        }
+
+        // ─── SIDEBAR ──────────────────────────────────
+        function renderSidebar() {
+            const list = document.getElementById('sidebar-list');
+            list.innerHTML = '';
+            forms.forEach((f, i) => {
+                const el = document.createElement('div');
+                el.className = 'sidebar-item' + (i === activeIndex ? ' active' : '');
+                el.innerHTML = `
+                    <span>${esc(f.title || 'Untitled')}</span>
+                    <span class="q-count">${f.questions.length}q</span>
+                `;
+                el.onclick = () => { activeIndex = i; renderSidebar(); renderForm(); };
+                list.appendChild(el);
+            });
+        }
+
+        // ─── FORM EDITOR ──────────────────────────────
+        function renderForm() {
+            if (activeIndex < 0 || activeIndex >= forms.length) return;
+            const form = forms[activeIndex];
+            const main = document.getElementById('main-content');
+
+            main.innerHTML = `
+                <div class="form-header">
+                    <div class="form-header-row">
+                        <input type="text" class="title-input" id="f-title" value="${escAttr(form.title)}" placeholder="Form Title">
+                        <button class="delete-form-btn" id="del-form">${forms.length > 1 ? 'Delete Form' : ''}</button>
+                    </div>
+                    <textarea class="desc-input" id="f-desc" placeholder="Form description (shown to applicants)...">${esc(form.description || '')}</textarea>
+                </div>
+                <div id="q-list"></div>
+                <button class="add-q-btn" id="add-q">+ Add Question</button>
+            `;
+
+            document.getElementById('f-title').oninput = e => { form.title = e.target.value; setChanged(true); renderSidebar(); };
+            document.getElementById('f-desc').oninput = e => { form.description = e.target.value; setChanged(true); };
+            document.getElementById('add-q').onclick = () => addQuestion(form);
+            if (forms.length > 1) {
+                document.getElementById('del-form').onclick = () => deleteForm();
+            }
+
+            renderQuestions(form);
+        }
+
+        function renderQuestions(form) {
+            const list = document.getElementById('q-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            form.questions.forEach((q, i) => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.draggable = true;
+                card.dataset.index = i;
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <span class="card-number">Question ${i + 1}</span>
+                        <div class="card-actions">
+                            <button onclick="moveQ(${i},-1)" ${i===0?'style="opacity:0.3"':''} title="Move up">&#9650;</button>
+                            <button onclick="moveQ(${i},1)" ${i===form.questions.length-1?'style="opacity:0.3"':''} title="Move down">&#9660;</button>
+                            <button class="del-btn" onclick="deleteQ(${i})" title="Delete">&#10005;</button>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field-group grow">
+                            <label>Question Label</label>
+                            <input type="text" value="${escAttr(q.label)}" oninput="updateQ(${i},'label',this.value)" placeholder="Enter question text">
+                        </div>
+                        <div class="field-group" style="width:130px;">
+                            <label>Type</label>
+                            <select onchange="updateQ(${i},'type',this.value); renderQuestions(forms[activeIndex])">
+                                <option value="text" ${q.type==='text'?'selected':''}>Short Text</option>
+                                <option value="paragraph" ${q.type==='paragraph'?'selected':''}>Paragraph</option>
+                                <option value="choice" ${q.type==='choice'?'selected':''}>Choice</option>
+                            </select>
+                        </div>
+                        <div class="toggle-row">
+                            <label class="toggle">
+                                <input type="checkbox" ${q.required?'checked':''} onchange="updateQ(${i},'required',this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                            <span style="font-size:0.75rem;color:#666;">Req</span>
+                        </div>
+                    </div>
+                    ${q.type === 'choice' ? renderOptionsEditor(i, q) : ''}
+                `;
+
+                // Drag & drop
+                card.ondragstart = e => { e.dataTransfer.setData('text/plain', i); card.classList.add('dragging'); };
+                card.ondragend = () => card.classList.remove('dragging');
+                card.ondragover = e => e.preventDefault();
+                card.ondrop = e => {
+                    e.preventDefault();
+                    const from = parseInt(e.dataTransfer.getData('text/plain'));
+                    if (from !== i) {
+                        const [moved] = form.questions.splice(from, 1);
+                        form.questions.splice(i, 0, moved);
+                        setChanged(true);
+                        renderQuestions(form);
+                    }
+                };
+
+                list.appendChild(card);
+            });
+        }
+
+        function renderOptionsEditor(qIndex, q) {
+            const opts = q.options || [];
+            const chips = opts.map((o, oi) =>
+                `<span class="option-chip">${esc(o)} <span class="remove-opt" onclick="removeOpt(${qIndex},${oi})">x</span></span>`
+            ).join('');
+
+            return `
+                <div class="options-section">
+                    <label>Dropdown Options</label>
+                    <div class="options-list">${chips || '<span style="color:#555;font-size:0.8rem;">No options yet</span>'}</div>
+                    <div class="add-option-row">
+                        <input type="text" id="new-opt-${qIndex}" placeholder="Add option..." onkeydown="if(event.key==='Enter')addOpt(${qIndex})">
+                        <button onclick="addOpt(${qIndex})">Add</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ─── QUESTION ACTIONS ──────────────────────────
+        function updateQ(i, field, value) {
+            forms[activeIndex].questions[i][field] = value;
+            if (field === 'type' && value === 'choice' && !forms[activeIndex].questions[i].options) {
+                forms[activeIndex].questions[i].options = [];
+            }
+            setChanged(true);
+        }
+
+        function addQuestion(form) {
+            form.questions.push({
+                id: 'q_' + Date.now(),
+                label: '',
+                type: 'text',
+                required: true
+            });
+            setChanged(true);
+            renderForm();
+            // Scroll to bottom
+            const main = document.getElementById('main-content');
+            main.scrollTop = main.scrollHeight;
+        }
+
+        function deleteQ(i) {
+            forms[activeIndex].questions.splice(i, 1);
+            setChanged(true);
+            renderQuestions(forms[activeIndex]);
+        }
+
+        function moveQ(i, dir) {
+            const qs = forms[activeIndex].questions;
+            const ni = i + dir;
+            if (ni < 0 || ni >= qs.length) return;
+            [qs[i], qs[ni]] = [qs[ni], qs[i]];
+            setChanged(true);
+            renderQuestions(forms[activeIndex]);
+        }
+
+        function addOpt(qIndex) {
+            const input = document.getElementById('new-opt-' + qIndex);
+            const val = input.value.trim();
+            if (!val) return;
+            if (!forms[activeIndex].questions[qIndex].options) forms[activeIndex].questions[qIndex].options = [];
+            forms[activeIndex].questions[qIndex].options.push(val);
+            input.value = '';
+            setChanged(true);
+            renderQuestions(forms[activeIndex]);
+        }
+
+        function removeOpt(qIndex, optIndex) {
+            forms[activeIndex].questions[qIndex].options.splice(optIndex, 1);
+            setChanged(true);
+            renderQuestions(forms[activeIndex]);
+        }
+
+        // ─── FORM ACTIONS ──────────────────────────────
+        document.getElementById('add-form-btn').onclick = () => {
+            forms.push({
+                id: 'form_' + Date.now(),
+                title: 'New Form',
+                description: '',
+                reviewChannelEnvKey: 'REVIEW_CHANNEL_ID',
+                questions: []
+            });
+            activeIndex = forms.length - 1;
+            setChanged(true);
+            renderSidebar();
+            renderForm();
+        };
+
+        function deleteForm() {
+            if (forms.length <= 1) return;
+            if (!confirm('Delete "' + (forms[activeIndex].title || 'this form') + '"?')) return;
+            forms.splice(activeIndex, 1);
+            activeIndex = Math.max(0, activeIndex - 1);
+            setChanged(true);
+            renderSidebar();
+            renderForm();
+        }
+
+        // ─── SAVE BAR ─────────────────────────────────
+        function setChanged(c) {
+            hasChanges = c;
+            document.getElementById('save-bar').classList.toggle('visible', c);
+        }
+
+        document.getElementById('save-btn').onclick = saveAllForms;
+        document.getElementById('discard-btn').onclick = () => {
+            forms = JSON.parse(originalJSON);
+            setChanged(false);
+            renderSidebar();
+            if (activeIndex >= forms.length) activeIndex = forms.length - 1;
+            renderForm();
+        };
+
+        // ─── TOAST ─────────────────────────────────────
+        function showToast(msg, type) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast visible ' + type;
+            setTimeout(() => t.classList.remove('visible'), 3000);
+        }
+
+        // ─── UTILS ─────────────────────────────────────
+        function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+        function escAttr(s) { return esc(s).replace(/"/g, '&quot;'); }
+
+        init();
+    </script>
+</body>
+</html>
