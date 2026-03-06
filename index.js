@@ -247,46 +247,54 @@ client.on('interactionCreate', async interaction => {
                 components: []
             });
 
-            // Fetch the full channel from the guild
-            const guild = await client.guilds.fetch(interaction.guildId);
-            const channel = await guild.channels.fetch(interaction.channelId);
+            try {
+                // Fetch the full channel from the guild
+                const guild = await client.guilds.fetch(interaction.guildId);
+                const channel = await guild.channels.fetch(interaction.channelId);
 
-            // Create a private thread (invitable: false prevents others from joining)
-            const thread = await channel.threads.create({
-                name: `${form.title} - ${interaction.user.username}`,
-                type: ChannelType.PrivateThread,
-                invitable: false,
-                reason: `Application by ${interaction.user.tag}`
-            });
+                // Create a private thread (invitable: false prevents others from joining)
+                const thread = await channel.threads.create({
+                    name: `${form.title} - ${interaction.user.username}`,
+                    type: ChannelType.PrivateThread,
+                    invitable: false,
+                    reason: `Application by ${interaction.user.tag}`
+                });
 
-            // Add the user to the thread
-            await thread.members.add(interaction.user.id);
+                // Add the user to the thread
+                await thread.members.add(interaction.user.id);
 
-            // Start session
-            const sess = {
-                formId,
-                userId: interaction.user.id,
-                answers: [],
-                questionIndex: 0,
-                startedAt: Date.now()
-            };
-            activeSessions.set(thread.id, sess);
+                // Start session
+                const sess = {
+                    formId,
+                    userId: interaction.user.id,
+                    answers: [],
+                    questionIndex: 0,
+                    startedAt: Date.now()
+                };
+                activeSessions.set(thread.id, sess);
 
-            // Send intro message
-            const intro = new EmbedBuilder()
-                .setTitle(form.title)
-                .setColor(0x5865F2)
-                .setDescription(
-                    (form.description ? form.description + '\n\n' : '') +
-                    `This form has **${form.questions.length} questions**.\n` +
-                    'Answer each question by typing your response in this thread.\n' +
-                    'Type `cancel` at any time to cancel your application.'
-                );
+                // Send intro message
+                const intro = new EmbedBuilder()
+                    .setTitle(form.title)
+                    .setColor(0x5865F2)
+                    .setDescription(
+                        (form.description ? form.description + '\n\n' : '') +
+                        `This form has **${form.questions.length} questions**.\n` +
+                        'Answer each question by typing your response in this thread.\n' +
+                        'Type `cancel` at any time to cancel your application.'
+                    );
 
-            await thread.send({ embeds: [intro] });
+                await thread.send({ embeds: [intro] });
 
-            // Send first question
-            await sendQuestion(thread, sess);
+                // Send first question
+                await sendQuestion(thread, sess);
+            } catch (err) {
+                console.error('Thread creation error:', err);
+                await interaction.followUp({
+                    content: `Failed to create thread: ${err.message}`,
+                    ephemeral: true
+                });
+            }
         }
 
         // ─── CHOICE ANSWER (SELECT MENU) ──────────────
