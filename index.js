@@ -251,10 +251,11 @@ client.on('interactionCreate', async interaction => {
             const guild = await client.guilds.fetch(interaction.guildId);
             const channel = await guild.channels.fetch(interaction.channelId);
 
-            // Create a private thread for the application
+            // Create a private thread (invitable: false prevents others from joining)
             const thread = await channel.threads.create({
                 name: `${form.title} - ${interaction.user.username}`,
                 type: ChannelType.PrivateThread,
+                invitable: false,
                 reason: `Application by ${interaction.user.tag}`
             });
 
@@ -615,5 +616,14 @@ const PORT = process.env.PORT || 3000;
 client.login(process.env.BOT_TOKEN).then(() => {
     app.listen(PORT, () => {
         console.log(`Dashboard running on port ${PORT}`);
+
+        // Keep-alive: ping our own health endpoint every 5 minutes to prevent Render sleep
+        if (process.env.BASE_URL || process.env.RENDER) {
+            setInterval(() => {
+                const url = (process.env.BASE_URL || `http://localhost:${PORT}`) + '/health';
+                fetch(url).catch(() => {});
+            }, 5 * 60 * 1000);
+            console.log('Keep-alive ping enabled (every 5 minutes)');
+        }
     });
 });
