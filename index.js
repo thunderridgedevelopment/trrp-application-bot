@@ -460,6 +460,7 @@ setInterval(() => {
 // EXPRESS WEB SERVER + DASHBOARD
 // ═══════════════════════════════════════════════════════════════════
 const app = express();
+app.set('trust proxy', 1); // Trust Render's proxy for https detection
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -471,8 +472,11 @@ app.use(session({
 }));
 
 function getBaseUrl(req) {
-    if (process.env.BASE_URL) return process.env.BASE_URL;
-    return `${req.protocol}://${req.get('host')}`;
+    const base = (process.env.BASE_URL || '').trim();
+    if (base) return base;
+    // On Render, trust the x-forwarded-proto header for https
+    const proto = req.get('x-forwarded-proto') || req.protocol;
+    return `${proto}://${req.get('host')}`;
 }
 
 function requireAuth(req, res, next) {
