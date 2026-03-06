@@ -1,5 +1,5 @@
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
+require('dotenv').config({ path: path.join(__dirname, '.env'), override: false });
 const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
@@ -557,6 +557,16 @@ app.get('/auth/logout', (req, res) => {
 app.get('/auth/me', (req, res) => {
     if (req.session && req.session.user) return res.json(req.session.user);
     res.status(401).json({ error: 'Not authenticated' });
+});
+
+// ─── DEBUG (remove later) ──────────────────────────────────────────
+app.get('/debug/env', (req, res) => {
+    res.json({
+        BASE_URL: process.env.BASE_URL,
+        baseUrl: getBaseUrl(req),
+        protocol: req.protocol,
+        host: req.get('host')
+    });
 });
 
 // ─── API ROUTES ────────────────────────────────────────────────────
