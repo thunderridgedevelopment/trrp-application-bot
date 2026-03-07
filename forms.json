@@ -385,6 +385,100 @@
           "required": false
         }
       ]
+    },
+    {
+      "id": "script_idea",
+      "title": "Script Idea Application",
+      "description": "Use this form to submit ideas for new scripts or features for the server. Please ensure your idea is clear, detailed, and fits the server's setting and economy. Staff review ideas based on roleplay value, feasibility, balance, and benefit to the wider player base. Submitting an idea does not guarantee implementation, but well-thought-out concepts are more likely to be reviewed and considered.",
+      "reviewChannelEnvKey": "REVIEW_CHANNEL_ID",
+      "questions": [
+        {
+          "id": "discord_name",
+          "label": "Discord Name / ID",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "char_name",
+          "label": "In-Game Character Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "script_name",
+          "label": "Script Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "id": "script_category",
+          "label": "Script Category",
+          "type": "choice",
+          "required": true,
+          "options": ["Gameplay Feature", "Job / Profession", "Economy", "Crime / Illegal Activity", "Quality of Life", "Roleplay Enhancement", "Other"]
+        },
+        {
+          "id": "short_summary",
+          "label": "Short Summary (1-3 sentences) — Describe the script idea briefly.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "detailed_desc",
+          "label": "Explain the script in detail — What does it do? How does it work in gameplay? What interactions does it create for players?",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "rp_impact",
+          "label": "How does this improve roleplay on the server? (New RP opportunities, immersion, player interaction, economy depth, etc.)",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "mechanics",
+          "label": "Explain how players interact with the system — Commands used, locations involved, items required, cooldowns or limits.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "scenario",
+          "label": "Describe a real in-game scenario where this script would be used.",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "balance",
+          "label": "How should this script be balanced? (Costs, cooldowns, risk vs reward, required roles/jobs)",
+          "type": "paragraph",
+          "required": true
+        },
+        {
+          "id": "complexity",
+          "label": "How complex do you think this script is?",
+          "type": "choice",
+          "required": false,
+          "options": ["Simple", "Moderate", "Complex"]
+        },
+        {
+          "id": "similar_scripts",
+          "label": "If you know any existing scripts similar to this, list them.",
+          "type": "paragraph",
+          "required": false
+        },
+        {
+          "id": "references",
+          "label": "Links, screenshots, videos, or examples from other servers (Optional)",
+          "type": "paragraph",
+          "required": false
+        },
+        {
+          "id": "additional_notes",
+          "label": "Anything else the dev team should know?",
+          "type": "paragraph",
+          "required": false
+        }
+      ]
     }
   ]
 }
