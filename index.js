@@ -95,6 +95,9 @@ async function processAnswer(thread, sess, answer) {
 
     const q = form.questions[sess.questionIndex];
 
+    // Reset inactivity timer
+    sess.lastActivity = Date.now();
+
     // Handle skip for optional questions
     if (answer.toLowerCase() === 'skip' && !q.required) {
         sess.answers.push({ question: q.label, answer: '*Skipped*' });
@@ -278,7 +281,8 @@ client.on('interactionCreate', async interaction => {
                     userId: interaction.user.id,
                     answers: [],
                     questionIndex: 0,
-                    startedAt: Date.now()
+                    startedAt: Date.now(),
+                    lastActivity: Date.now()
                 };
                 activeSessions.set(thread.id, sess);
 
@@ -458,21 +462,6 @@ client.on('messageCreate', async message => {
     await processAnswer(message.channel, sess, message.content);
 });
 
-// ─── AUTO-EXPIRE SESSIONS (30 min timeout) ─────────────────────────
-setInterval(() => {
-    const now = Date.now();
-    for (const [threadId, sess] of activeSessions) {
-        if (now - sess.startedAt > 30 * 60 * 1000) {
-            activeSessions.delete(threadId);
-            const thread = client.channels.cache.get(threadId);
-            if (thread) {
-                thread.send('This application has timed out (30 minutes). Please use `/apply` to start a new one.')
-                    .then(() => thread.setLocked(true).catch(() => {}))
-                    .catch(() => {});
-            }
-        }
-    }
-}, 60 * 1000);
 
 // ═══════════════════════════════════════════════════════════════════
 // EXPRESS WEB SERVER + DASHBOARD
@@ -631,16 +620,7 @@ app.get('/health', (req, res) => {
 const PORT = process.env.PORT || 3000;
 
 client.login(process.env.BOT_TOKEN).then(() => {
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
         console.log(`Dashboard running on port ${PORT}`);
-
-        // Keep-alive: ping our own health endpoint every 5 minutes to prevent Render sleep
-        if (process.env.BASE_URL || process.env.RENDER) {
-            setInterval(() => {
-                const url = (process.env.BASE_URL || `http://localhost:${PORT}`) + '/health';
-                fetch(url).catch(() => {});
-            }, 5 * 60 * 1000);
-            console.log('Keep-alive ping enabled (every 5 minutes)');
-        }
     });
 });
