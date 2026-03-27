@@ -1,7 +1,7 @@
 {
   "name": "discord-application-bot",
-  "version": "1.0.0",
-  "description": "Discord application form bot with web dashboard",
+  "version": "2.0.0",
+  "description": "Discord application form bot with Firestore integration",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -13,6 +13,7 @@
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
-    "express-session": "^1.18.1"
+    "express-session": "^1.18.1",
+    "firebase-admin": "^12.0.0"
   }
 }

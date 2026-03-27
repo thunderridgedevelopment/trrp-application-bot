@@ -3,6 +3,7 @@ require('dotenv').config({ path: path.join(__dirname, '.env'), override: false }
 const fs = require('fs');
 const express = require('express');
 const session = require('express-session');
+const admin = require('firebase-admin');
 const {
     Client,
     GatewayIntentBits,
@@ -19,6 +20,17 @@ const {
     ChannelType
 } = require('discord.js');
 
+// ─── FIREBASE ADMIN SETUP ──────────────────────────────────────────
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+    ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
+    : require('./serviceAccountKey.json');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+});
+
+const db = admin.firestore();
+
 // ─── PATHS ─────────────────────────────────────────────────────────
 const FORMS_PATH = path.join(__dirname, 'forms.json');
 
@@ -33,6 +45,58 @@ function saveForms(data) {
 
 // Track active application sessions: threadId -> { formId, userId, answers, questionIndex }
 const activeSessions = new Map();
+
+// ─── FIRESTORE HELPERS ─────────────────────────────────────────────
+async function saveApplicationToFirestore(sess, form, user) {
+    try {
+        const docRef = await db.collection('applications').add({
+            formId: form.id,
+            formTitle: form.title,
+            applicant: {
+                userId: user.id,
+                username: user.username,
+                tag: user.tag,
+                avatar: user.displayAvatarURL()
+            },
+            answers: sess.answers,
+            status: 'pending',
+            submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+            reviewedBy: null,
+            reviewedAt: null,
+            denialReason: null
+        });
+        console.log(`Application saved to Firestore: ${docRef.id}`);
+        return docRef.id;
+    } catch (err) {
+        console.error('Failed to save application to Firestore:', err);
+        return null;
+    }
+}
+
+async function updateApplicationStatus(userId, status, reviewerTag, reason) {
+    try {
+        const snapshot = await db.collection('applications')
+            .where('applicant.userId', '==', userId)
+            .where('status', '==', 'pending')
+            .orderBy('submittedAt', 'desc')
+            .limit(1)
+            .get();
+
+        if (!snapshot.empty) {
+            const doc = snapshot.docs[0];
+            const updateData = {
+                status,
+                reviewedBy: reviewerTag,
+                reviewedAt: admin.firestore.FieldValue.serverTimestamp()
+            };
+            if (reason) updateData.denialReason = reason;
+            await doc.ref.update(updateData);
+            console.log(`Application ${doc.id} updated to ${status}`);
+        }
+    } catch (err) {
+        console.error('Failed to update application in Firestore:', err);
+    }
+}
 
 // ─── DISCORD BOT ───────────────────────────────────────────────────
 const client = new Client({
@@ -68,7 +132,6 @@ async function sendQuestion(thread, sess) {
     const requiredTag = q.required ? ' *(required)*' : ' *(optional — type `skip` to skip)*';
 
     if (q.type === 'choice' && q.options && q.options.length > 0) {
-        // Send a select menu for choice questions
         const select = new StringSelectMenuBuilder()
             .setCustomId(`answer_choice_${sess.formId}_${q.id}`)
             .setPlaceholder('Select an option...')
@@ -81,7 +144,6 @@ async function sendQuestion(thread, sess) {
             components: [row]
         });
     } else {
-        // Text or paragraph — user types their answer
         const typeHint = q.type === 'paragraph' ? '\n*Write a detailed response below:*' : '';
         await thread.send(`${progress}\n${q.label}${requiredTag}${typeHint}`);
     }
@@ -95,10 +157,8 @@ async function processAnswer(thread, sess, answer) {
 
     const q = form.questions[sess.questionIndex];
 
-    // Reset inactivity timer
     sess.lastActivity = Date.now();
 
-    // Handle skip for optional questions
     if (answer.toLowerCase() === 'skip' && !q.required) {
         sess.answers.push({ question: q.label, answer: '*Skipped*' });
     } else if (answer.toLowerCase() === 'skip' && q.required) {
@@ -110,7 +170,6 @@ async function processAnswer(thread, sess, answer) {
 
     sess.questionIndex++;
 
-    // Check if form is complete
     if (sess.questionIndex >= form.questions.length) {
         await submitApplication(thread, sess, form);
     } else {
@@ -129,10 +188,14 @@ async function submitApplication(thread, sess, form) {
         ]
     });
 
-    // Lock the thread
     try { await thread.setLocked(true); } catch {}
 
-    // Build review embeds (split across multiple if needed, Discord has 25 field limit)
+    const user = await client.users.fetch(sess.userId);
+
+    // Save to Firestore
+    await saveApplicationToFirestore(sess, form, user);
+
+    // Build review embeds for Discord
     const reviewChannelId = process.env[form.reviewChannelEnvKey] || process.env.REVIEW_CHANNEL_ID;
     let reviewChannel = client.channels.cache.get(reviewChannelId);
     if (!reviewChannel) {
@@ -145,7 +208,6 @@ async function submitApplication(thread, sess, form) {
         return;
     }
 
-    const user = await client.users.fetch(sess.userId);
     const embeds = [];
     let currentEmbed = new EmbedBuilder()
         .setTitle(`New ${form.title}`)
@@ -161,13 +223,10 @@ async function submitApplication(thread, sess, form) {
     let fieldCount = 3;
 
     for (const a of sess.answers) {
-        // Truncate long answers for embed field limit (1024 chars)
         const val = a.answer.length > 1024 ? a.answer.substring(0, 1021) + '...' : a.answer;
-        // Truncate label for field name limit (256 chars)
         const name = a.question.length > 256 ? a.question.substring(0, 253) + '...' : a.question;
 
         if (fieldCount >= 24) {
-            // Start a new embed
             embeds.push(currentEmbed);
             currentEmbed = new EmbedBuilder().setColor(0x5865F2);
             fieldCount = 0;
@@ -179,7 +238,6 @@ async function submitApplication(thread, sess, form) {
 
     embeds.push(currentEmbed);
 
-    // Approve / Deny buttons
     const buttons = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
             .setCustomId(`approve_${sess.userId}`)
@@ -215,7 +273,6 @@ client.on('interactionCreate', async interaction => {
                 });
             }
 
-            // Show form selection menu
             const select = new StringSelectMenuBuilder()
                 .setCustomId('select_form')
                 .setPlaceholder('Choose an application...')
@@ -244,7 +301,6 @@ client.on('interactionCreate', async interaction => {
                 return await interaction.update({ content: 'Form not found.', components: [] });
             }
 
-            // Check if user already has an active session
             for (const [, s] of activeSessions) {
                 if (s.userId === interaction.user.id) {
                     return await interaction.update({
@@ -260,11 +316,9 @@ client.on('interactionCreate', async interaction => {
             });
 
             try {
-                // Fetch the full channel from the guild
                 const guild = await client.guilds.fetch(interaction.guildId);
                 const channel = await guild.channels.fetch(interaction.channelId);
 
-                // Create a private thread (invitable: false prevents others from joining)
                 const thread = await channel.threads.create({
                     name: `${form.title} - ${interaction.user.username}`,
                     type: ChannelType.PrivateThread,
@@ -272,10 +326,8 @@ client.on('interactionCreate', async interaction => {
                     reason: `Application by ${interaction.user.tag}`
                 });
 
-                // Add the user to the thread
                 await thread.members.add(interaction.user.id);
 
-                // Start session
                 const sess = {
                     formId,
                     userId: interaction.user.id,
@@ -286,7 +338,6 @@ client.on('interactionCreate', async interaction => {
                 };
                 activeSessions.set(thread.id, sess);
 
-                // Send intro message
                 const intro = new EmbedBuilder()
                     .setTitle(form.title)
                     .setColor(0x5865F2)
@@ -298,8 +349,6 @@ client.on('interactionCreate', async interaction => {
                     );
 
                 await thread.send({ embeds: [intro] });
-
-                // Send first question
                 await sendQuestion(thread, sess);
             } catch (err) {
                 console.error('Thread creation error:', err);
@@ -336,7 +385,6 @@ client.on('interactionCreate', async interaction => {
             }
 
             if (action === 'deny') {
-                // Show modal asking for denial reason
                 const modal = new ModalBuilder()
                     .setCustomId(`deny_reason_${userId}_${interaction.message.id}`)
                     .setTitle('Deny Application');
@@ -352,7 +400,7 @@ client.on('interactionCreate', async interaction => {
                 return await interaction.showModal(modal);
             }
 
-            // Approve — no reason needed
+            // Approve
             const statusColor = 0x57F287;
 
             const originalEmbed = interaction.message.embeds[0];
@@ -363,6 +411,9 @@ client.on('interactionCreate', async interaction => {
             const otherEmbeds = interaction.message.embeds.slice(1).map(e =>
                 EmbedBuilder.from(e).setColor(statusColor)
             );
+
+            // Update Firestore
+            await updateApplicationStatus(userId, 'approved', interaction.user.tag, null);
 
             try {
                 const applicant = await client.users.fetch(userId);
@@ -384,14 +435,12 @@ client.on('interactionCreate', async interaction => {
         // ─── DENY REASON MODAL SUBMIT ────────────────────
         if (interaction.isModalSubmit() && interaction.customId.startsWith('deny_reason_')) {
             const parts = interaction.customId.split('_');
-            // deny_reason_USERID_MESSAGEID
             const userId = parts[2];
             const messageId = parts[3];
             const reason = interaction.fields.getTextInputValue('reason');
 
             const statusColor = 0xED4245;
 
-            // Update the original review message
             const reviewMessage = await interaction.channel.messages.fetch(messageId);
 
             const originalEmbed = reviewMessage.embeds[0];
@@ -409,7 +458,9 @@ client.on('interactionCreate', async interaction => {
                 components: []
             });
 
-            // DM the applicant with the reason
+            // Update Firestore
+            await updateApplicationStatus(userId, 'denied', interaction.user.tag, reason);
+
             try {
                 const applicant = await client.users.fetch(userId);
                 const dmEmbed = new EmbedBuilder()
@@ -438,7 +489,6 @@ client.on('messageCreate', async message => {
     if (!sess) return;
     if (message.author.id !== sess.userId) return;
 
-    // Cancel command
     if (message.content.toLowerCase() === 'cancel') {
         activeSessions.delete(message.channel.id);
         await message.reply('Application cancelled.');
@@ -447,7 +497,6 @@ client.on('messageCreate', async message => {
         return;
     }
 
-    // Check if current question is a choice type (handled by select menu, not text)
     const data = loadForms();
     const form = data.forms.find(f => f.id === sess.formId);
     if (!form) return;
@@ -458,7 +507,6 @@ client.on('messageCreate', async message => {
         return;
     }
 
-    // Process text answer
     await processAnswer(message.channel, sess, message.content);
 });
 
@@ -467,7 +515,7 @@ client.on('messageCreate', async message => {
 // EXPRESS WEB SERVER + DASHBOARD
 // ═══════════════════════════════════════════════════════════════════
 const app = express();
-app.set('trust proxy', 1); // Trust Render's proxy for https detection
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -481,7 +529,6 @@ app.use(session({
 function getBaseUrl(req) {
     const base = (process.env.BASE_URL || '').trim();
     if (base) return base;
-    // On Render, trust the x-forwarded-proto header for https
     const proto = req.get('x-forwarded-proto') || req.protocol;
     return `${proto}://${req.get('host')}`;
 }
@@ -570,16 +617,6 @@ app.get('/auth/me', (req, res) => {
     res.status(401).json({ error: 'Not authenticated' });
 });
 
-// ─── DEBUG (remove later) ──────────────────────────────────────────
-app.get('/debug/env', (req, res) => {
-    res.json({
-        BASE_URL: process.env.BASE_URL,
-        baseUrl: getBaseUrl(req),
-        protocol: req.protocol,
-        host: req.get('host')
-    });
-});
-
 // ─── API ROUTES ────────────────────────────────────────────────────
 app.get('/api/forms', requireAuth, (req, res) => {
     const data = loadForms();
@@ -622,5 +659,6 @@ const PORT = process.env.PORT || 3000;
 client.login(process.env.BOT_TOKEN).then(() => {
     app.listen(PORT, '0.0.0.0', () => {
         console.log(`Dashboard running on port ${PORT}`);
+        console.log('Firebase Firestore connected');
     });
 });
